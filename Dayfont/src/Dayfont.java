@@ -1,3 +1,4 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -13,6 +14,7 @@ public class Dayfont extends JFrame {
         loadedBrush = dfb.loadBrush(file.getAbsolutePath());
     }
     private ArrayList<Point> points = new ArrayList<>();
+    private JButton addImageButton;
     private JPanel drawingPanel;
     private JSlider brushSizeSlider;
     private JButton colorPickerButton, loadBrushButton, saveBrushButton;
@@ -34,6 +36,9 @@ public class Dayfont extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 g.setColor(isEraserMode ? getBackground() : brushColor);
+                if (loadedImage != null) {
+                    g.drawImage(loadedImage, 0, 0, this);
+                }
                 for (Point point : points) {
                     if (loadedBrush != null) {
                         g.fillOval(point.x - loadedBrush.width / 2, point.y - loadedBrush.height / 2, loadedBrush.width, loadedBrush.height);
@@ -101,17 +106,36 @@ public class Dayfont extends JFrame {
         saveBrushButton = new JButton("Save Brush");
         saveBrushButton.addActionListener(e -> saveBrush());
 
-        JPanel controlPanel = new JPanel();
+        addImageButton = new JButton("Add Image");
+        addImageButton.addActionListener(e -> addImage());
+        JPanel controlPanel = null;
+
+        controlPanel = new JPanel();
         controlPanel.add(brushSizeSlider);
         controlPanel.add(colorPickerButton);
         controlPanel.add(eraserButton);
         controlPanel.add(brushLibrary);
         controlPanel.add(loadBrushButton);
         controlPanel.add(saveBrushButton);
+        controlPanel.add(addImageButton);
 
         add(drawingPanel, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.SOUTH);
         setVisible(true);
+    }
+    private Image loadedImage = null;
+    private void addImage() {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                loadedImage = ImageIO.read(file);
+                drawingPanel.repaint();
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Failed to load image: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void loadBrush() throws IOException {
