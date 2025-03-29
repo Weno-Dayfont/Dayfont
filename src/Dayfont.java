@@ -5,6 +5,8 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.ArrayList;
 import dfb.DayfontBrush;
+import java.awt.Toolkit;
+import java.util.Hashtable;
 
 public class Dayfont extends JFrame {
 
@@ -16,6 +18,10 @@ public class Dayfont extends JFrame {
     private ArrayList<Point> points = new ArrayList<>();
     private JButton addImageButton;
     private JPanel drawingPanel;
+    private JButton addTextButton;
+    private String textToAdd = null;
+    private Point textPosition = null;
+
     private JSlider brushSizeSlider;
     private JButton colorPickerButton, loadBrushButton, saveBrushButton;
     private JToggleButton eraserButton;
@@ -56,6 +62,10 @@ public class Dayfont extends JFrame {
                                 g.fillPolygon(xPoints, yPoints, 3);
                                 break;
                         }
+                        if (textToAdd != null && textPosition != null) {
+                            g.setColor(brushColor);
+                            g.drawString(textToAdd, textPosition.x, textPosition.y);
+                        }
                     }
                 }
             }
@@ -73,14 +83,24 @@ public class Dayfont extends JFrame {
             }
         });
 
+// Set icons on buttons
+        colorPickerButton = new JButton("Brush Color");
+        eraserButton = new JToggleButton("Eraser");
+        loadBrushButton = new JButton("Load Brush");
+        saveBrushButton = new JButton("Save Brush");
+        addImageButton = new JButton("Add Image");
+
+        addTextButton = new JButton("Add Text");
+        addTextButton.addActionListener(e -> addText());
+
         brushSizeSlider = new JSlider(JSlider.HORIZONTAL, 1, 50, brushSize);
         brushSizeSlider.setMajorTickSpacing(10);
-        brushSizeSlider.setMinorTickSpacing(1);
+        brushSizeSlider.setMinorTickSpacing(3);
         brushSizeSlider.setPaintTicks(true);
         brushSizeSlider.setPaintLabels(true);
         brushSizeSlider.addChangeListener(e -> brushSize = brushSizeSlider.getValue());
 
-        colorPickerButton = new JButton("Pick Brush Color");
+        colorPickerButton = new JButton("Brush Color");
         colorPickerButton.addActionListener(e -> {
             Color selectedColor = JColorChooser.showDialog(this, "Choose Brush Color", brushColor);
             if (selectedColor != null) {
@@ -111,19 +131,51 @@ public class Dayfont extends JFrame {
         JPanel controlPanel = null;
 
         controlPanel = new JPanel();
+        controlPanel.setBackground(Color.DARK_GRAY);
         controlPanel.add(brushSizeSlider);
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
+        for (int i = brushSizeSlider.getMinimum(); i <= brushSizeSlider.getMaximum(); i += brushSizeSlider.getMajorTickSpacing()) {
+            JLabel label = new JLabel(String.valueOf(i));
+            label.setForeground(Color.WHITE);
+            labelTable.put(i, label);
+        }
+        brushSizeSlider.setLabelTable(labelTable);
+
         controlPanel.add(colorPickerButton);
         controlPanel.add(eraserButton);
         controlPanel.add(brushLibrary);
         controlPanel.add(loadBrushButton);
         controlPanel.add(saveBrushButton);
         controlPanel.add(addImageButton);
+        controlPanel.add(addTextButton);
 
         add(drawingPanel, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.SOUTH);
         setVisible(true);
+
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Image cursorImage = toolkit.getImage("resources/cursor.png");
+        Cursor customCursor = toolkit.createCustomCursor(cursorImage, new Point(0, 0), "Paint Cursor");
+        drawingPanel.setCursor(customCursor);
     }
     private Image loadedImage = null;
+
+    private void addText() {
+        String inputText = JOptionPane.showInputDialog(this, "Enter text to add:");
+        if (inputText != null && !inputText.trim().isEmpty()) {
+            textToAdd = inputText;
+            textPosition = null; // Reset text position
+            drawingPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    textPosition = e.getPoint();
+                    drawingPanel.repaint();
+                    drawingPanel.removeMouseListener(this); // Remove listener after text is added
+                }
+            });
+        }
+    }
+
     private void addImage() {
         JFileChooser fileChooser = new JFileChooser();
         int result = fileChooser.showOpenDialog(this);

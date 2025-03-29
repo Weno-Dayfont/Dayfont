@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Dayfont:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Dayfont_jar</output-path>
+    <root id="archive" name="Dayfont.jar">
+      <element id="module-output" name="Dayfont" />
+    </root>
+  </artifact>
+</component>
